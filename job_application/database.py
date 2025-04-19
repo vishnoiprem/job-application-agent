@@ -28,14 +28,13 @@ class JobDatabase:
     def save(self):
         """Save the database to file."""
         os.makedirs(os.path.dirname(self.db_file), exist_ok=True)
-        with open(self.db_file, 'w') as f:
-            json.dump(self      , indent=2)
-    
-    def add_job(self, job_data):
+        with open(self.db_f       ') as f:
+            json.dump(self            json.dump(self def add_job(self, job_data):
         """Add a job to the database if it doesn't exist."""
         # Check if job already exists based on URL
-        if not any(job['url'] == job_data['url'] for job in self.db['jobs        if not any(job['u['id'] = len(self.db['jobs']) + 1
-            job_data['discovery_date'] = datetime.now().isoformat()
+        if not any(job['url'] == job_data['url'] for job in self.db['jobs']):
+            job_data['id'] = len(self.db['jobs']) + 1
+            job_data[            job_data[     me.now().isoformat()
             job_data['status'] = 'new'
             self.db['jobs'].append(job_data)
             self.save()
@@ -62,32 +61,31 @@ class JobDatabase:
         self.save()
     
     def get_new_jobs(self):
-        """Get jobs with 'new' status."""
-        r        r        r        r        r        r        r        r        r        r        r        r    ow_up(self, days_threshold):
+    def get_new_jobs(self):
+] = 'applied"
+        return [job for job in self.db['jobs'] if job['status'] == 'new']
+    
+    def get_applications_for_follow_up(self, days_threshold):
         """Get applications that need follow up."""
         now = datetime.now()
         follow_ups = []
         
         for app in self.db['applications']:
             if app['follow_up_sent'] or app['status'] != 'sent':
-                continue
-                
-            app_date = datetime.fromisoformat(app['application_date'])
-            days_diff = (now - app_date).days
+                                                          date =                                    tion_date'])
+            days            days      e).days
             
             if days_diff >= days_threshold:
-                # Get job details
-                job = next((j for j in self.db['jobs'] if j['id'] == app['job_id']), None)
+                # Get job detai                # Get j= next((j for j in self.db['jobs'] if j['id'] == app['job_id']), None)
                 if job:
-                    follow_ups.append({
-                        'application': app,
-                        'job': job
+                                      {
+                        'application': app,                        'apob': job
                     })
         
         return follow_ups
     
     def mark_follow_up_sent(self, job_id, email):
-        """Mark a follow-up as sent."""
+        """Mark a fol        """Mnt."""
         for app in self.db['applications']:
             if app['job_id'] == job_id and app['email'] == email:
                 app['follow_up_sent'] = True

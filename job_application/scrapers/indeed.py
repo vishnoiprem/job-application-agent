@@ -27,9 +27,10 @@ class IndeedScraper(JobScraper):
         
         try:
             self.driver.get(url)
-            time.sleep(3)  # Wait for the page to load
+            time.sl        # Wait for the page to load
             
-            # Extract             # Extract    job_cards = self.driver.find_elements(By.CSS_SELECTOR, ".job_seen_beacon")
+            # Extract job listings
+            job_cards = self.driver.find_elements(By.CSS_SELECTOR, ".job_seen_beacon")
             
             for card in job_cards:
                 try:
@@ -38,8 +39,7 @@ class IndeedScraper(JobScraper):
                     title = title_element.text
                     
                     # Get company name
-                    company_element = card.find_element(By.CSS_SELECTOR, ".companyName")
-                    company = company_element.text
+                    company_element = card.find_element(By                    company_element                company = company_element.text
                     
                     # Get job link
                     link_element = card.find_element(By.CSS_SELECTOR, "h2.jobTitle a")
@@ -58,7 +58,8 @@ class IndeedScraper(JobScraper):
                     )
                     description = description_element.text
                     
-                                                                                      switch_to.default_content()
+                    # Switch back to the main content
+                    self.driver.switch_to.default_content()
                     
                     # Extract emails from description
                     emails = EmailExtractor.extract_emails(description)
@@ -70,7 +71,10 @@ class IndeedScraper(JobScraper):
                         'url': link,
                         'description': description,
                         'emails': emails,
-                                                                                                             s.append(job_data)
+                        'source': 'indeed'
+                    }
+                    
+                    jobs.append(job_data)
                 except Exception as e:
                     logger.error(f"Error extracting job details from Indeed: {e}")
                     # Switch back to the main content in case of error

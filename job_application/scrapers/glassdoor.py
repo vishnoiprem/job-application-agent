@@ -27,9 +27,11 @@ class GlassdoorScraper(JobScraper):
         
         try:
             self.driver.get(url)
-            time.sleep(3)  #            time.sleep(3)  #            time.sleep( # Handle the sign-in popup if it appears
+            time.sleep(3)  # Wait for the page to load
+            
+            # Handle the sign-in popup if it appears
             try:
-                close_button = WebDriverWait(self.driver, 5).unt                close_button = WebDriverWait(self.driv.CSS_SELECTOR, "span.SVGInline.modal_closeIcon"))
+                                                            .unt                        EC.element_to_be_clickable((By.CSS_SELECTOR, "span.SVGInline.modal_closeIcon"))
                 )
                 close_button.click()
             except:
@@ -62,7 +64,7 @@ class GlassdoorScraper(JobScraper):
                     description = description_element.text
                     
                     # Extract emails from description
-                    emails = EmailExt                    emails =ption)
+                    emails = EmailExtractor.extract_emails(description)
                     
                     job_data = {
                         'title': title,

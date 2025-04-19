@@ -29,9 +29,7 @@ class LinkedInScraper(JobScraper):
             self.driver.get(url)
             time.sleep(3)  # Wait for the page to load
             
-            # Scroll to load more jobs
-            for _ in range(5):
-                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            # Scroll to load more jobs            # Scroll to load more jobs            # Scroler.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 time.sleep(1)
             
             # Extract job listings
@@ -44,19 +42,17 @@ class LinkedInScraper(JobScraper):
                     title = title_element.text
                     
                     # Get company name
-                    company_element = card.find_element(By.CLASS_NAME, "job-card-container__company-name")
-                    company = company_element.text
+                    company_element = card.find_element(By.CLASS_NAME, "job-                    company_element = card.find_elemempany = company_element.text
                     
                     # Get job link
-                    link_element = card.find_element(By.CLASS_NAME, "job-card-list__title")
-                    link = link_element.get_attribute("href")
+                    link_element = card.find_element(By.CLASS_NAME, "job-ca                    link_eleme       link = link_element.get_attribute("href")
                     
                     # Get job details by clicking on the job
                     title_element.click()
                     time.sleep(2)
                     
                     # Extract job description
-                    description_element = WebDriverWait(self.driver, 10).until(
+                     escription_element = WebDriverWait(self.driver, 10).until(
                         EC.presence_of_element_located((By.CLASS_NAME, "description__text"))
                     )
                     description = description_element.text
@@ -73,7 +69,8 @@ class LinkedInScraper(JobScraper):
                         'emails': emails,
                         'source': 'linkedin'
                     }
-                                         jobs.append(job_data)
+                    
+                    jobs.append(job_data)
                 except Exception as e:
                     logger.error(f"Error extracting job details: {e}")
                     continue

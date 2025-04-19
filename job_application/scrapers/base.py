@@ -28,5 +28,8 @@ class JobScraper:
         """Close the WebDriver."""
         if self.driver:
             self.driver.quit()
-            self.driv            self.driv            self.driv     tle, lo            self.driv         s for a given title and location."""
+            self.driver = None
+    
+    def scrape_jobs(self, job_title, location):
+        """Scrape jobs for a given title and location."""
         raise NotImplementedError("Subclasses must implement this method")

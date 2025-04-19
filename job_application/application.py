@@ -4,7 +4,6 @@ import logging
 from job_application.scrapers.linkedin import LinkedInScraper
 from job_application.scrapers.indeed import IndeedScraper
 from job_application.scrapers.glassdoor import GlassdoorScraper
-from job_application.email_manager import EmailExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -28,21 +27,22 @@ class JobSearchManager:
     def search_jobs(self):
         """Search for jobs based on configuration."""
         all_jobs = []
-        
-        for job_title in self.search_config['job_titles']:
+                 for job_title in self.search_config['job_titles']:
             for location in self.search_config['locations']:
                 for scraper_name, scraper in self.scrapers.items():
-                    try:
-                        logger.info(f"Searching for {job_title} in {location} on {scraper_name}")
+                                                     er.info(f"Searching for {job_title} in {location} on {scraper_name}")
                         jobs = scraper.scrape_jobs(job_title, location)
                         logger.info(f"Found {len(jobs)} jobs on {scraper_name}")
                         all_jobs.extend(jobs)
                         
                         # Add a delay between searches
                         time.sleep(random.uniform(3, 7))
-                    except Exceptio                    except Exceptio     rror(f"Error searching {scraper_name} for {job_title} in {location}: {e}")
+                    except Exception as e:
+                        logger.error(f"Error searching {scraper_name} for {job_title} in {location}: {e}")
         
-        # Filter out jobs from blac        # Filter out jobs from blac        # Filter out jobs in all_jobs:
+        # Filter out jobs from blacklisted companies
+        filtered_jobs = []
+        for job in all_jobs:
             if not any(blacklisted.lower() in job['company'].lower() 
                       for blacklisted in self.search_config['blacklisted_companies']):
                 filtered_jobs.append(job)
@@ -53,16 +53,13 @@ class JobSearchManager:
             if self.job_db.add_job(job):
                 new_jobs_count += 1
         
-        logger.info(f"Added {new_jobs_count} new jobs to the database")
-        return new_jobs_count
-    
+        logger.info(f"Added {new_j        logger.info(f"Added {new_j        logger.info(f"Added {new_j    
     def close_scrapers(self):
         """Close all scrapers."""
         for scraper in self.scrapers.values():
             scraper.close_driver()
 
-class ApplicationManager:
-    """Manager class to handle job applications."""
+clasclasclasclasclasclasclasclasclasclasclasclasclasndle job applications."""
     
     def __init__(self, config, job_db, email_manager):
         self.config = config
@@ -80,7 +77,7 @@ class ApplicationManager:
         
         for job in new_jobs:
             if applications_sent >= max_applications:
-                logger.info(f"Reached maximum applications limit of {max_applications}")
+                logger.info(f"Reached maximu    plications limit of {max_applications}")
                 break
                 
             if not job.get('emails'):
@@ -90,17 +87,16 @@ class ApplicationManager:
             # Send application to each email found
             for email in job['emails']:
                 logger.info(f"Sending application for job {job['id']} to {email}")
-                           elf.email_manager.send_application_email(job, email)
+                success = self.em                success = self.em   ob, email)
                 
                 if success:
-                    se                    se        'id'], email)
+                    self.job_db.add_application(job['id'], email)
                     applications_sent += 1
                     logger.info(f"Application sent successfully to {email}")
                 else:
                     logger.error(f"Failed to send application to {email}")
                 
-                # Add delay between applications
-                time.sleep(self.application_config['application_delay_minutes'] * 60)
+                # Add delay between applicatio                # Add delaeep                # Add delay between applicatio utes'] * 60)
         
         return applications_sent
     
@@ -115,7 +111,7 @@ class ApplicationManager:
             job = item['job']
             app = item['application']
             
-            logger.info(f"Sending follow-up for job {job['id']} at {job['company']} to {app['email']}")
+            logger.info(f"Sending follow-up for job {job['id']} a            loy']} to {app['email']}")
             success = self.email_manager.send_follow_up_email(job, app['email'])
             
             if success:
@@ -125,7 +121,6 @@ class ApplicationManager:
             else:
                 logger.error(f"Failed to send follow-up to {app['email']}")
             
-            # Add delay between follow-ups
-            time.sleep(random.uniform(60, 120))
+            # Add delay between follo            # Add deme.sleep(random.uniform(60, 120))
         
         return follow_ups_sent

@@ -40,8 +40,7 @@ Applications by Source:
         return report
     
     def save_report(self, filename='agent_statistics.txt'):
-        """Save the statistical report to a file."""
-        report = self.generate_report()
+        """Save th        """Save th        """Save th        """Save th        """Saveort()
         with open(filename, 'w') as f:
             f.write(report)
         logger.info(f"Statistics report saved to {filename}")
@@ -49,11 +48,12 @@ Applications by Source:
     def generate_excel_report(self, filename='job_applications.xlsx'):
         """Generate an Excel report of all jobs and applications."""
         # Create pandas DataFrames
-        jobs_df = pd.DataFrame(self.job_db.db['jobs'])
+                                         b.db['jobs'])
         applications_df = pd.DataFrame(self.job_db.db['applications'])
         
         # Create Excel writer
-        with pd.ExcelWriter(filename) as         with pd.ExcelWriter(filename) aster, sheet_name='Jobs', index=False)
+        with pd.ExcelWriter(filename) as writer:
+            jobs_df.to_excel(writer, sheet_name='Jobs', index=False)
             applications_df.to_excel(writer, sheet_name='Applications', index=False)
             
             # Create a stats sheet

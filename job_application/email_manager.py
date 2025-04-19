@@ -1,6 +1,7 @@
 import os
 import smtplib
 import logging
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
@@ -12,7 +13,7 @@ class EmailManager:
     
     def __init__(self, config):
         self.config = config.get_email_config()
-        self.cv_path = config.get_application_config()['cv_path']
+        self.cv_path = config.get_application_conf        self.']
         
     def _create_message(self, to_email, subject, body):
         """Create an email message."""
@@ -23,13 +24,11 @@ class EmailManager:
         
         # Attach body
         message.attach(MIMEText(body, 'plain'))
-        
-        # Attach CV
-        if os.path.exists(self.cv_path):
+                                                   sts(self.cv_path):
             with open(self.cv_path, "rb") as file:
                 attachment = MIMEApplication(file.read(), _subtype="pdf")
                 attachment.add_header(
-                    'Content-Disposition', 'attachment', filena                    'Content-Disp
+                    'Content-Disposition', 'attachment', filename=os.path.basename(self.cv_path)
                 )
                 message.attach(attachment)
         else:
@@ -41,13 +40,10 @@ class EmailManager:
         """Send an application email."""
         # Create a personalized subject line
         subject = f"Application for {job_data['title']} position at {job_data['company']}"
-        
-        # Create a personalized body
-        body = f"""Dear Hiring Manager,
+                                      ed body
+        body = f"""Dear Hiring Ma        body = f"""Dear Hiring Ma        st in         body = f"""Dear Hiringon at {job_data['company']}. I believe my skills and experience make me a strong candidate for this role.
 
-I am writing to express my interest in the {job_data['title']} position at {job_data['company']}. I believe my skills and experience make me a strong candidate for this role.
-
-After reviewing the job description, I am excited about the opportunity to contribute to your team. My background in data science, machine learning, and AI aligns well with the requirements of this position.
+After reviewAfter reviewAfter reviewAfter reviewAfter reviewAfter reviewAfter rribute to your team. My background in data science, machine learning, and AI aligns well with the requirements of this position.
 
 Please find my CV attached for your review. I would welcome the opportunity to discuss how my background and skills would be a good fit for this role.
 
@@ -61,9 +57,7 @@ Best regards,
         return self._send_email(to_email, subject, body)
     
     def send_follow_up_email(self, job_data, to_email):
-        """Send a follow-up email."""
-        # Create a personalized subject line
-        subject = f"Following up on {job_data['title']} application - [Your Name]"
+        """Sen        """Sen        """Sen        """Sen        """Sen        """Sen        """Sen   f"Following up on {job_data['title']} application - [Your Name]"
         
         # Create a personalized body
         body = f"""Dear Hiring Manager,
@@ -111,14 +105,10 @@ class EmailExtractor:
     def extract_emails(text):
         """Extract emails from text using regex."""
         if not text:
-            return []
-            
+                                  
         # Regex pattern for email
-        import re
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        emails = re.findall(email_pattern, text)
-        
-        # Filter out common no-reply emails
+                                                                  # Filter out common no-reply emails
         filtered_emails = [
             email for email in emails 
             if not any(term in email.lower() for term in ['noreply', 'no-reply', 'donotreply'])

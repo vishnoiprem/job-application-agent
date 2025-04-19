@@ -26,7 +26,7 @@ class Config:
         
         self.config['JOB_SEARCH'] = {
             'job_titles': 'Data Engineer, AI Engineer, Head of Data, Machine Learning Engineer',
-            'locations': 'Remote, New York, San Francisco, London',
+            'locations': 'Remote, New York, London, Singapore, Hong Kong, Vietnam, Thailand',
             'days_old': '7',
             'blacklisted_companies': 'Company1, Company2',
             'search_linkedin': 'True',
@@ -72,7 +72,12 @@ class Config:
         """Get application configuration."""
         return {
             'cv_path': self.config['APPLICATION']['cv_path'],
-            'follow_up_days': int(self.config['APPLICATION']['follow_up_days'])            'follow_up_days': int(self.config['APPLICATION']['follow_up_days'])            'follow_up_da           'application_delay_minutes': int(self.config['APPLICATION']['application_delay_minutes'])
-                                                                   n to file."""
+            'follow_up_days': int(self.config['APPLICATION']['follow_up_days']),
+            'max_applications_per_day': int(self.config['APPLICATION']['max_applications_per_day']),
+            'application_delay_minutes': int(self.config['APPLICATION']['application_delay_minutes'])
+        }
+    
+    def save(self):
+        """Save the configuration to file."""
         with open(self.config_file, 'w') as f:
             self.config.write(f)

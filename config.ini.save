@@ -1,3 +1,6 @@
+
+q!
+B
 [EMAIL]
 smtp_server = smtp.gmail.com
 smtp_port = 587
@@ -7,7 +10,7 @@ send_real_emails = False
 
 [JOB_SEARCH]
 job_titles = Data Engineer, AI Engineer, Head of Data
-locations = Remote, New York, London, Singapore, Hong Kong, Vietnam, Thailand
+locations = Remote, New York, London
 days_old = 7
 blacklisted_companies = Company1, Company2
 search_linkedin = True

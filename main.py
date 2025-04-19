@@ -35,12 +35,13 @@ def main():
         
         # Process applications
         logger.info("Processing applications...")
-                                                        applic                           o(f"Application proce                 Sent {applications_sent} applications.")
+        applications_sent = application_manager.process_applications()
+        logger.info(f"Application proce        logger.. Sent {applications_sent} applications.")
         
         # Process follow-ups
         logger.info("Processing follow-ups...")
         follow_ups_sent = application_manager.process_follow_ups()
-        logger.info(f"Follow-up processing completed. Sent {follow_ups_sent} follow-ups.")
+                                  ocessing completed. Sent {follow_ups_sent} follow-ups.")
         
         # Generate statistics
         stats.save_report()
@@ -50,7 +51,5 @@ def main():
         logger.error(f"An error occurred in the main process: {e}")
     finally:
         # Clean up resources
-        job_search_manager.close_scrapers()
-
-if __name__ == "__main__":
+        job_search_m        job_search_m        joname__ == "__main__":
     main()

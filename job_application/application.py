@@ -27,10 +27,12 @@ class JobSearchManager:
     def search_jobs(self):
         """Search for jobs based on configuration."""
         all_jobs = []
-                 for job_title in self.search_config['job_titles']:
+        
+        for job_title in self.search_config['job_titles']:
             for location in self.search_config['locations']:
                 for scraper_name, scraper in self.scrapers.items():
-                                                     er.info(f"Searching for {job_title} in {location} on {scraper_name}")
+                    try:
+                        logger.info(f"Searching for {job_title} in {location} on {scraper_name}")
                         jobs = scraper.scrape_jobs(job_title, location)
                         logger.info(f"Found {len(jobs)} jobs on {scraper_name}")
                         all_jobs.extend(jobs)
@@ -53,13 +55,16 @@ class JobSearchManager:
             if self.job_db.add_job(job):
                 new_jobs_count += 1
         
-        logger.info(f"Added {new_j        logger.info(f"Added {new_j        logger.info(f"Added {new_j    
+        logger.info(f"Added {new_jobs_count} new jobs to the database")
+        return new_jobs_count
+    
     def close_scrapers(self):
         """Close all scrapers."""
         for scraper in self.scrapers.values():
             scraper.close_driver()
 
-clasclasclasclasclasclasclasclasclasclasclasclasclasndle job applications."""
+class ApplicationManager:
+    """Manager class to handle job applications."""
     
     def __init__(self, config, job_db, email_manager):
         self.config = config
@@ -77,7 +82,7 @@ clasclasclasclasclasclasclasclasclasclasclasclasclasndle job applications."""
         
         for job in new_jobs:
             if applications_sent >= max_applications:
-                logger.info(f"Reached maximu    plications limit of {max_applications}")
+                logger.info(f"Reached maximum applications limit of {max_applications}")
                 break
                 
             if not job.get('emails'):
@@ -87,7 +92,7 @@ clasclasclasclasclasclasclasclasclasclasclasclasclasndle job applications."""
             # Send application to each email found
             for email in job['emails']:
                 logger.info(f"Sending application for job {job['id']} to {email}")
-                success = self.em                success = self.em   ob, email)
+                success = self.email_manager.send_application_email(job, email)
                 
                 if success:
                     self.job_db.add_application(job['id'], email)
@@ -96,7 +101,8 @@ clasclasclasclasclasclasclasclasclasclasclasclasclasndle job applications."""
                 else:
                     logger.error(f"Failed to send application to {email}")
                 
-                # Add delay between applicatio                # Add delaeep                # Add delay between applicatio utes'] * 60)
+                # Add delay between applications
+                time.sleep(self.application_config['application_delay_minutes'] * 60)
         
         return applications_sent
     
@@ -105,13 +111,11 @@ clasclasclasclasclasclasclasclasclasclasclasclasclasndle job applications."""
         follow_ups = self.job_db.get_applications_for_follow_up(self.application_config['follow_up_days'])
         logger.info(f"Found {len(follow_ups)} applications for follow-up")
         
-        follow_ups_sent = 0
-        
-        for item in follow_ups:
+        foll        foll        foll        foll item in follow_ups:
             job = item['job']
             app = item['application']
             
-            logger.info(f"Sending follow-up for job {job['id']} a            loy']} to {app['email']}")
+            logger.info(f"Sending follow-up for job {job['id']} at {job['company']} to {app['email']}")
             success = self.email_manager.send_follow_up_email(job, app['email'])
             
             if success:
@@ -121,6 +125,4 @@ clasclasclasclasclasclasclasclasclasclasclasclasclasndle job applications."""
             else:
                 logger.error(f"Failed to send follow-up to {app['email']}")
             
-            # Add delay between follo            # Add deme.sleep(random.uniform(60, 120))
-        
-        return follow_ups_sent
+            # Add delay between follo            # Add delay betp(random.un            # Add delay between  return follow_ups_sent

@@ -1,0 +1,22 @@
+[EMAIL]
+smtp_server = smtp.gmail.com
+smtp_port = 587
+email = your.email@gmail.com
+password = your_app_password
+send_real_emails = False
+
+[JOB_SEARCH]
+job_titles = Data Engineer, AI Engineer, Head of Data
+locations = Remote, New York, London
+days_old = 7
+blacklisted_companies = Company1, Company2
+search_linkedin = True
+search_indeed = True
+search_glassdoor = True
+search_interval_minutes = 60
+
+[APPLICATION]
+cv_path = data/resumes/my_resume.pdf
+follow_up_days = 7
+max_applications_per_day = 10
+application_delay_minutes = 15

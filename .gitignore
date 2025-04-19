@@ -1,0 +1,26 @@
+# Ignore config with sensitive info
+config.ini
+
+# Ignore database and logs
+*.json
+*.log
+*.xlsx
+*.txt
+
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# PyCharm files
+.idea/
+
+# Data directories
+data/database/
+data/resumes/

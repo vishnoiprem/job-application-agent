@@ -2,7 +2,6 @@
 config.ini
 
 # Ignore database and logs
-*.json
 *.log
 *.xlsx
 *.txt
@@ -22,5 +21,3 @@ ENV/
 .idea/
 
 # Data directories
-data/database/
-data/resumes/

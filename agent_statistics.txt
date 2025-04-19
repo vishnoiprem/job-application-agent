@@ -1,0 +1,20 @@
+
+Job Application Agent Statistics
+===============================
+
+Job Search:
+-----------
+Total Jobs Found: 30
+New Jobs Pending: 23
+Applied Jobs: 7
+
+Applications:
+------------
+Total Applications Sent: 7
+Follow-ups Sent: 0
+
+Applications by Source:
+---------------------
+Linkedin: 7
+
+Generated on: 2025-04-19 18:18:10

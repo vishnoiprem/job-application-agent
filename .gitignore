@@ -4,7 +4,7 @@ config.ini
 # Ignore database and logs
 *.log
 *.xlsx
-*.txt
+.idea
 
 # Python cache
 __pycache__/

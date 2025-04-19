@@ -8,7 +8,6 @@ config.ini
 
 # Python cache
 __pycache__/
-*.py[cod]
 *.class
 
 # Virtual environment

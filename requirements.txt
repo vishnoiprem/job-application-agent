@@ -6,3 +6,4 @@ pandas
 configparser
 playwright
 openpyxl
+beautifulsoup4

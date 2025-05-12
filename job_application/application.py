@@ -1,135 +1,92 @@
-import time
-import random
+import datetime
 import logging
-from job_application.scrapers.linkedin import LinkedInScraper
-from job_application.scrapers.indeed import IndeedScraper
-from job_application.scrapers.glassdoor import GlassdoorScraper
+from job_application.email_handler import EmailConsolidator
+from job_application.database import JobDatabase
+from job_application.config import Config
+from job_application.email_manager import EmailManager
 
 logger = logging.getLogger(__name__)
 
+def process_applications(jobs, applications, config):
+    """Process job applications, consolidating emails to the same recipient."""
 
-class JobSearchManager:
-    """Manager class to coordinate job searches across platforms."""
+    new_jobs = [job for job in jobs if job["status"] == "new"]
+    logger.info(f"Found {len(new_jobs)} new jobs to process")
 
-    def __init__(self, config, job_db):
-        self.config = config
-        self.job_db = job_db
-        self.search_config = config.get_job_search_config()
+    # Initialize email consolidator
+    email_consolidator = EmailConsolidator()
 
-        # Initialize scrapers
-        self.scrapers = {}
-        if self.search_config['search_linkedin']:
-            self.scrapers['linkedin'] = LinkedInScraper(config)
-        if self.search_config['search_indeed']:
-            self.scrapers['indeed'] = IndeedScraper(config)
-        if self.search_config['search_glassdoor']:
-            self.scrapers['glassdoor'] = GlassdoorScraper(config)
+    # Group jobs by email
+    email_to_jobs = email_consolidator.consolidate_applications(jobs, applications)
 
-    def search_jobs(self):
-        """Search for jobs based on configuration."""
-        all_jobs = []
+    # Track new applications
+    new_applications = []
 
-        for job_title in self.search_config['job_titles']:
-            for location in self.search_config['locations']:
-                for scraper_name, scraper in self.scrapers.items():
-                    try:
-                        logger.info(f"Searching for {job_title} in {location} on {scraper_name}")
-                        jobs = scraper.scrape_jobs(job_title, location)
-                        logger.info(f"Found {len(jobs)} jobs on {scraper_name}")
-                        all_jobs.extend(jobs)
+    for email, job_ids in email_to_jobs.items():
+        if not job_ids:
+            continue
 
-                        # Add a delay between searches
-                        time.sleep(random.uniform(3, 7))
-                    except Exception as e:
-                        logger.error(f"Error searching {scraper_name} for {job_title} in {location}: {e}")
+        # Skip already-applied emails
+        already_applied = all(
+            any(app.get("email") == email and app.get("job_id") == job_id for app in applications)
+            for job_id in job_ids
+        )
+        if already_applied:
+            logger.info(f"Skipping already-applied email: {email}")
+            continue
 
-        # Filter out jobs from blacklisted companies
-        filtered_jobs = []
-        for job in all_jobs:
-            if not any(blacklisted.lower() in job['company'].lower()
-                       for blacklisted in self.search_config['blacklisted_companies']):
-                filtered_jobs.append(job)
+        # Get job details
+        job_details = []
+        for job_id in job_ids:
+            job = next((j for j in jobs if j["id"] == job_id), None)
+            if job:
+                job_details.append({
+                    "id": job_id,
+                    "company": job.get("company", "Unknown Company"),
+                    "title": job.get("title", "Unknown Title")
+                })
 
-        # Add jobs to database
-        new_jobs_count = 0
-        for job in filtered_jobs:
-            if self.job_db.add_job(job):
-                new_jobs_count += 1
+        if not job_details:
+            continue
 
-        logger.info(f"Added {new_jobs_count} new jobs to the database")
-        return new_jobs_count
+        # Create and send email
+        email_data = email_consolidator.format_consolidated_email(
+            email,
+            job_details,
+            config.get("user_profile", {})
+        )
+        email_consolidator.send_email(email_data)
 
-    def close_scrapers(self):
-        """Close all scrapers."""
-        for scraper in self.scrapers.values():
-            scraper.close_driver()
+        # Log new applications
+        for job_id in job_ids:
+            new_applications.append({
+                "email": email,
+                "job_id": job_id,
+                "timestamp": datetime.datetime.now().isoformat()
+            })
+
+    return new_applications
 
 
 class ApplicationManager:
-    """Manager class to handle job applications."""
+    """Class wrapper for processing job applications."""
 
-    def __init__(self, config, job_db, email_manager):
+    def __init__(self, config: Config, job_db: JobDatabase, email_manager: EmailManager):
         self.config = config
         self.job_db = job_db
         self.email_manager = email_manager
-        self.application_config = config.get_application_config()
 
     def process_applications(self):
-        """Process applications for new jobs."""
-        new_jobs = self.job_db.get_new_jobs()
-        logger.info(f"Found {len(new_jobs)} new jobs to process")
+        jobs = self.job_db.db.get("jobs", [])
+        applications = self.job_db.db.get("applications", [])
 
-        applications_sent = 0
-        max_applications = self.application_config['max_applications_per_day']
+        new_applications = process_applications(jobs, applications, self.config)
 
-        for job in new_jobs:
-            if applications_sent >= max_applications:
-                logger.info(f"Reached maximum applications limit of {max_applications}")
-                break
+        self.job_db.db["applications"].extend(new_applications)
+        self.job_db.save()
 
-            if not job.get('emails'):
-                logger.info(f"No emails found for job {job['id']} at {job['company']}")
-                continue
-
-            # Send application to each email found
-            for email in job['emails']:
-                logger.info(f"Sending application for job {job['id']} to {email}")
-                success = self.email_manager.send_application_email(job, email)
-
-                if success:
-                    self.job_db.add_application(job['id'], email)
-                    applications_sent += 1
-                    logger.info(f"Application sent successfully to {email}")
-                else:
-                    logger.error(f"Failed to send application to {email}")
-
-                # Add delay between applications
-                time.sleep(self.application_config['application_delay_minutes'] * 60)
-
-        return applications_sent
+        return len(new_applications)
 
     def process_follow_ups(self):
-        """Process follow-up emails for applications."""
-        follow_ups = self.job_db.get_applications_for_follow_up(self.application_config['follow_up_days'])
-        logger.info(f"Found {len(follow_ups)} applications for follow-up")
-
-        follow_ups_sent = 0
-
-        for item in follow_ups:
-            job = item['job']
-            app = item['application']
-
-            logger.info(f"Sending follow-up for job {job['id']} at {job['company']} to {app['email']}")
-            success = self.email_manager.send_follow_up_email(job, app['email'])
-
-            if success:
-                self.job_db.mark_follow_up_sent(job['id'], app['email'])
-                follow_ups_sent += 1
-                logger.info(f"Follow-up sent successfully to {app['email']}")
-            else:
-                logger.error(f"Failed to send follow-up to {app['email']}")
-
-            # Add delay between follow-ups
-            time.sleep(random.uniform(60, 120))
-
-        return follow_ups_sent
+        # Optional: add follow-up email automation here
+        return 0

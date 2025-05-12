@@ -2,14 +2,12 @@
 config.ini
 
 # Ignore database and logs
-*.json
 *.log
 *.xlsx
-*.txt
+.idea
 
 # Python cache
 __pycache__/
-*.py[cod]
 *.class
 
 # Virtual environment
@@ -21,4 +19,3 @@ ENV/
 # PyCharm files
 .idea/
 
-# Data directories

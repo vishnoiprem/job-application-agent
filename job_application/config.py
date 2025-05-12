@@ -27,7 +27,7 @@ class Config:
 
         self.config['JOB_SEARCH'] = {
             'job_titles': 'Data Engineer, AI Engineer, Head of Data, Machine Learning Engineer',
-            'locations': 'Remote, New York, London',
+            'locations': 'Remote, New York, San Francisco, London, Singapore, Hong Kong, Vietnam, Thailand',
             'days_old': '7',
             'blacklisted_companies': 'Company1, Company2',
             'search_linkedin': 'True',

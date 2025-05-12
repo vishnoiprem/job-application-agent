@@ -1,0 +1,19 @@
+
+Job Application Agent Statistics
+===============================
+
+Job Search:
+-----------
+Total Jobs Found: 0
+New Jobs Pending: 0
+Applied Jobs: 0
+
+Applications:
+------------
+Total Applications Sent: 0
+Follow-ups Sent: 0
+
+Applications by Source:
+---------------------
+
+Generated on: 2025-04-20 10:20:55

@@ -1,86 +1,129 @@
 import time
 import logging
+import json
+from pathlib import Path
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException, ElementNotInteractableException
 from job_application.scrapers.base import JobScraper
 from job_application.email_manager import EmailExtractor
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
-
 
 class LinkedInScraper(JobScraper):
     """Scraper for LinkedIn job postings."""
 
+    def fallback_extract_title_company(self):
+        soup = BeautifulSoup(self.driver.page_source, "html.parser")
+        og_title = soup.find("meta", property="og:title")
+        if og_title:
+            content = og_title.get("content", "")
+            if " at " in content:
+                return content.split(" at ", 1)
+            return content, "Unknown Company"
+        title_tag = soup.title.string if soup.title else "Unknown Title"
+        return title_tag.split("-")[0].strip(), "Unknown Company"
+
     def scrape_jobs(self, job_title, location):
-        """Scrape LinkedIn jobs."""
         if not self.driver:
             self._initialize_driver()
+
+        cookie_path = Path("data/linkedin_cookies.json")
+        if cookie_path.exists():
+            self.driver.get("https://www.linkedin.com")
+            with open(cookie_path) as f:
+                cookies = json.load(f)
+            for cookie in cookies:
+                try:
+                    self.driver.add_cookie(cookie)
+                except Exception as e:
+                    logger.warning(f"Cookie error: {e}")
+            self.driver.refresh()
+            logger.info("✅ LinkedIn cookies loaded")
+        else:
+            logger.warning("⚠️ No cookie file found. Login may be required.")
 
         jobs = []
         logger.info(f"Searching LinkedIn for {job_title} in {location}")
 
-        # Format the job title and location for the URL
         formatted_job = job_title.replace(' ', '%20')
         formatted_location = location.replace(' ', '%20')
-
         url = f"https://www.linkedin.com/jobs/search/?keywords={formatted_job}&location={formatted_location}&f_TPR=r604800"
-        print(url)
+
         try:
             self.driver.get(url)
-            time.sleep(3)  # Wait for the page to load
+            time.sleep(8)
 
-            # Scroll to load more jobs
-            for _ in range(5):
+            for i in range(3):
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(1)
+                time.sleep(2)
 
-            # Extract job listings
-            job_cards = self.driver.find_elements(By.CLASS_NAME, "job-card-container")
+            job_cards = self.driver.find_elements(By.CLASS_NAME, "base-card")
+            logger.info(f"Found {len(job_cards)} job cards")
 
-            for card in job_cards:
+            for idx, card in enumerate(job_cards[:10]):
                 try:
-                    # Get job title
-                    title_element = card.find_element(By.CLASS_NAME, "job-card-list__title")
-                    title = title_element.text
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", card)
+                    time.sleep(1)
+                    self.driver.execute_script("arguments[0].click();", card)
+                    time.sleep(3)
 
-                    # Get company name
-                    company_element = card.find_element(By.CLASS_NAME, "job-card-container__company-name")
-                    company = company_element.text
-
-                    # Get job link
-                    link_element = card.find_element(By.CLASS_NAME, "job-card-list__title")
-                    link = link_element.get_attribute("href")
-
-                    # Get job details by clicking on the job
-                    title_element.click()
-                    time.sleep(2)
-
-                    # Extract job description
-                    description_element = WebDriverWait(self.driver, 10).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, "description__text"))
+                    WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, "jobs-details__main-content"))
                     )
-                    description = description_element.text
 
-                    # Extract emails from description
+                    try:
+                        title_element = WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "h2.jobs-unified-top-card__job-title"))
+                        )
+                        title = title_element.text.strip()
+                    except Exception:
+                        title, _ = self.fallback_extract_title_company()
+                        logger.warning("Fallback used for title extraction")
+
+                    try:
+                        company_element = WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "span.jobs-unified-top-card__company-name"))
+                        )
+                        company = company_element.text.strip()
+                    except Exception:
+                        _, company = self.fallback_extract_title_company()
+                        logger.warning("Fallback used for company extraction")
+
+                    try:
+                        link = card.get_attribute("href") or self.driver.current_url
+                    except:
+                        link = self.driver.current_url
+
+                    try:
+                        description_element = WebDriverWait(self.driver, 5).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "div.show-more-less-html__markup"))
+                        )
+                        description = description_element.text.strip()
+                    except TimeoutException:
+                        description = ""
+                        logger.warning("Could not extract description")
+
                     emails = EmailExtractor.extract_emails(description)
 
                     job_data = {
-                        'title': title,
-                        'company': company,
-                        'location': location,
-                        'url': link,
-                        'description': description,
-                        'emails': emails,
-                        'source': 'linkedin'
+                        "title": title,
+                        "company": company,
+                        "location": location,
+                        "url": link,
+                        "description": description,
+                        "emails": emails,
+                        "source": "linkedin"
                     }
-                    print(job_data)
                     jobs.append(job_data)
+
                 except Exception as e:
-                    logger.error(f"Error extracting job details: {e}")
+                    logger.error(f"❌ Failed to extract job {idx + 1}: {e}")
                     continue
 
         except Exception as e:
-            logger.error(f"Error scraping LinkedIn: {e}")
+            logger.error(f"🔴 General scraping error: {e}")
 
         return jobs

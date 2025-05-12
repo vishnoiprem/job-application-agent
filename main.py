@@ -2,7 +2,7 @@ import logging
 from job_application.config import Config
 from job_application.database import JobDatabase
 from job_application.email_manager import EmailManager
-from job_application.application import JobSearchManager, ApplicationManager
+from job_application.application import ApplicationManager  # ✅ Fixed line
 from job_application.statistics import AgentStatistics
 from datetime import datetime
 
@@ -24,17 +24,10 @@ def main():
     config = Config()
     job_db = JobDatabase()
     email_manager = EmailManager(config)
-    job_search_manager = JobSearchManager(config, job_db)
     application_manager = ApplicationManager(config, job_db, email_manager)
     stats = AgentStatistics(job_db)
 
     try:
-        # Search for new jobs
-        logger.info("Starting job search...")
-        new_jobs = job_search_manager.search_jobs()
-        print(new_jobs)
-        logger.info(f"Job search completed. Found {new_jobs} new jobs.")
-
         # Process applications
         logger.info("Processing applications...")
         applications_sent = application_manager.process_applications()
@@ -51,9 +44,6 @@ def main():
 
     except Exception as e:
         logger.error(f"An error occurred in the main process: {e}")
-    finally:
-        # Clean up resources
-        job_search_manager.close_scrapers()
 
 
 if __name__ == "__main__":

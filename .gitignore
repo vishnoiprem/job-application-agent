@@ -22,5 +22,3 @@ ENV/
 .idea/
 
 # Data directories
-data/database/
-data/resumes/
